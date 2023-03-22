@@ -35,6 +35,12 @@ struct SystemBootParameters
 
   std::string filename;
   std::string save_state;
+  std::string replay_filename;
+  std::string host_server;
+  std::string host_port;
+  std::string transmit_server;
+  std::string transmit_port;
+  std::string transport;
   std::string override_exe;
   std::optional<bool> override_fast_boot;
   std::optional<bool> override_fullscreen;

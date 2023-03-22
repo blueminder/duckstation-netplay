@@ -10,6 +10,9 @@
 #include "system.h"
 #include "util/state_wrapper.h"
 #include <cmath>
+
+#include "core/dojo/dojo.h"
+
 Log_SetChannel(AnalogController);
 
 AnalogController::AnalogController(u32 index) : Controller(index)
@@ -245,6 +248,7 @@ void AnalogController::SetBindState(u32 index, float value)
   }
 
   const u16 bit = u16(1) << static_cast<u8>(index);
+  u16 last = ~Dojo::Session::GetLastHeldInput(index);
 
   if (value >= m_button_deadzone)
   {
@@ -252,6 +256,7 @@ void AnalogController::SetBindState(u32 index, float value)
       System::SetRunaheadReplayFlag();
 
     m_button_state &= ~(bit);
+    Dojo::Session::SetLastHeldInput(m_index, (last & ~bit) ^ 0xFFFF);
   }
   else
   {
@@ -259,6 +264,7 @@ void AnalogController::SetBindState(u32 index, float value)
       System::SetRunaheadReplayFlag();
 
     m_button_state |= bit;
+    Dojo::Session::SetLastHeldInput(m_index, (last | bit) ^ 0xFFFF);
   }
 }
 
@@ -266,6 +272,11 @@ u32 AnalogController::GetButtonStateBits() const
 {
   // flip bits, native data is active low
   return m_button_state ^ 0xFFFF;
+}
+
+void AnalogController::SetButtonStateBits(u32 button_state_bits)
+{
+  m_button_state = ~(button_state_bits ^ 0xFFFF);
 }
 
 std::optional<u32> AnalogController::GetAnalogInputBytes() const

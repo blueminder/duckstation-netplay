@@ -56,6 +56,8 @@ u32 Controller::GetButtonStateBits() const
   return 0;
 }
 
+void Controller::SetButtonStateBits(u32 button_state_bits) {}
+
 bool Controller::InAnalogMode() const
 {
   return false;

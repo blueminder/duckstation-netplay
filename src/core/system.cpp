@@ -56,6 +56,9 @@
 #include <fstream>
 #include <limits>
 #include <thread>
+
+#include <core/dojo/dojo.h>
+
 Log_SetChannel(System);
 
 #ifdef _WIN32
@@ -1116,6 +1119,25 @@ bool System::BootSystem(SystemBootParameters parameters)
   s_state = State::Starting;
   s_startup_cancelled.store(false);
   s_region = g_settings.region;
+
+  if (!parameters.replay_filename.empty())
+    Dojo::Session::SetReplayFilename(parameters.replay_filename);
+
+  if (!parameters.host_server.empty())
+    Dojo::Net::host_server = parameters.host_server;
+
+  if (!parameters.host_port.empty())
+    Dojo::Net::host_port = parameters.host_port;
+
+  if (!parameters.transmit_server.empty())
+    Dojo::Net::transmit_server = parameters.transmit_server;
+
+  if (!parameters.transmit_port.empty())
+    Dojo::Net::transmit_port = parameters.transmit_port;
+
+  if (!parameters.transport.empty())
+    Dojo::Net::transport = parameters.transport;
+
   Host::OnSystemStarting();
 
   // Load CD image up and detect region.
@@ -1256,6 +1278,8 @@ bool System::BootSystem(SystemBootParameters parameters)
   UpdateControllers();
   UpdateMemoryCardTypes();
   UpdateMultitaps();
+  if (g_settings.dojo.enabled)
+    Dojo::Session::Init(s_running_game_title);
   InternalReset();
 
   // Enable tty by patching bios.
@@ -1538,6 +1562,17 @@ void System::Execute()
       System::RunFrame();
     else
       System::RunFrames();
+
+    if (Dojo::Session::session_ended)
+    {
+      PauseSystem(true);
+      std::string msg = "Session ended.";
+      if (g_settings.dojo.replay)
+        msg = "Replay ended.";
+      else if (g_settings.dojo.receive)
+        msg = "Transmission ended.";
+      Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+    }
 
     // this can shut us down
     Host::PumpMessagesOnCPUThread();
@@ -2193,6 +2228,9 @@ void System::SingleStepCPU()
 
 void System::DoRunFrame()
 {
+  if (g_settings.dojo.enabled)
+    Dojo::Session::FrameAction();
+
   g_gpu->RestoreGraphicsAPIState();
 
   if (CPU::g_state.use_debug_dispatcher)
@@ -2233,6 +2271,9 @@ void System::DoRunFrame()
 
 void System::RunFrame()
 {
+  if (Dojo::Session::enabled)
+    Dojo::Session::FrameAction();
+
   if (s_rewind_load_counter >= 0)
   {
     DoRewind();
