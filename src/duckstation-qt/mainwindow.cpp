@@ -1415,14 +1415,12 @@ void MainWindow::onGameListEntryContextMenuRequested(const QPoint& point)
 
       menu.addSeparator();
     }
-    /*
+
     connect(menu.addAction(tr("Start Training")), &QAction::triggered, [this, entry]() {
-      g_settings.dojo.enabled = true;
-      g_settings.dojo.training = true;
-      g_settings.dojo.replay = false;
-      g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
+      auto boot_params = std::make_shared<SystemBootParameters>(entry->path);
+      boot_params->training = true;
+      g_emu_thread->bootSystem(std::move(boot_params));
     });
-    */
 
     QAction* action = menu.addAction(tr("Properties..."));
     connect(action, &QAction::triggered,

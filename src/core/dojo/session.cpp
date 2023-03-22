@@ -181,7 +181,7 @@ void Dojo::Session::FillStartFrames(u32 start_frame, int total_players = 2)
   }
 }
 
-void Dojo::Session::Init(std::string game_title, bool p_record, bool p_replay)
+void Dojo::Session::Init(std::string game_title, bool p_record, bool p_replay, bool p_training)
 {
   enabled = g_settings.dojo.enabled;
   record = g_settings.dojo.record;
@@ -191,7 +191,7 @@ void Dojo::Session::Init(std::string game_title, bool p_record, bool p_replay)
   delay = g_settings.dojo.delay;
   receive = g_settings.dojo.receive;
 
-  Training::enabled = g_settings.dojo.training;
+  Training::enabled = p_training;
   Net::hosting = g_settings.dojo.hosting;
   Net::Transmitter::enabled = g_settings.dojo.transmit;
 
