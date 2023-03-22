@@ -53,6 +53,7 @@
 #include <cmath>
 #include <cstdio>
 #include <deque>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <thread>
@@ -1278,8 +1279,19 @@ bool System::BootSystem(SystemBootParameters parameters)
   UpdateControllers();
   UpdateMemoryCardTypes();
   UpdateMultitaps();
-  if (g_settings.dojo.enabled)
-    Dojo::Session::Init(s_running_game_title);
+
+  bool enable_replay = parameters.replay.has_value() ? parameters.replay.value() : false;
+  if (g_settings.dojo.record || enable_replay)
+  {
+    auto game_title = s_running_game_title;
+    if (game_title.empty())
+    {
+      std::filesystem::path game_path = exe_boot;
+      game_title = game_path.stem().string();
+    }
+    Dojo::Session::Init(game_title, g_settings.dojo.record, enable_replay);
+  }
+
   InternalReset();
 
   // Enable tty by patching bios.
@@ -1567,9 +1579,9 @@ void System::Execute()
     {
       PauseSystem(true);
       std::string msg = "Session ended.";
-      if (g_settings.dojo.replay)
+      if (Dojo::Session::replay)
         msg = "Replay ended.";
-      else if (g_settings.dojo.receive)
+      else if (Dojo::Session::receive)
         msg = "Transmission ended.";
       Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
     }

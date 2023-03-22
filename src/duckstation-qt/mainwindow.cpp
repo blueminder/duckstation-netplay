@@ -1399,82 +1399,30 @@ void MainWindow::onGameListEntryContextMenuRequested(const QPoint& point)
   {
     if (!s_system_valid)
     {
-      connect(menu.addAction(tr("Start Training")), &QAction::triggered, [this, entry]() {
-        g_settings.dojo.enabled = true;
-        g_settings.dojo.training = true;
-        g_settings.dojo.replay = false;
-        g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
-      });
-
       connect(menu.addAction(tr("Open Replay")), &QAction::triggered, [this, entry]() {
-        g_settings.dojo.enabled = true;
-        g_settings.dojo.replay = true;
-        g_settings.dojo.training = false;
+        auto boot_params = std::make_shared<SystemBootParameters>(entry->path);
+        boot_params->replay = true;
+        std::string replay_folder = Path::Combine(EmuFolders::DataRoot, "replays");
         const QString filename =
-          QFileDialog::getOpenFileName(this, tr("Open Replay File"), QString(), tr("Replay Files (*.duckr)"));
+          QFileDialog::getOpenFileName(this, tr("Open Replay File"), QString::fromStdString(replay_folder), tr("Replay Files (*.duckr)"));
 
         if (filename.isEmpty())
           return;
 
         Dojo::Session::SetReplayFilename(filename.toStdString());
-        g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
-      });
-
-      connect(menu.addAction(tr("Host Netplay Match")), &QAction::triggered, [this, entry]() {
-        g_settings.dojo.enabled = true;
-        g_settings.dojo.hosting = true;
-        g_settings.dojo.training = false;
-        g_settings.dojo.replay = false;
-
-        bool delay_ok;
-        int delay = 1;
-        delay = QInputDialog::getInt(this, tr("Set Delay"), tr("Delay"), 2, 1, 20, 1, &delay_ok);
-
-        if (!delay_ok)
-          return;
-
-        g_settings.dojo.delay = delay;
-
-        g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
-      });
-
-      connect(menu.addAction(tr("Join Netplay Match")), &QAction::triggered, [this, entry]() {
-        g_settings.dojo.enabled = true;
-        g_settings.dojo.hosting = false;
-        g_settings.dojo.training = false;
-        g_settings.dojo.replay = false;
-
-        bool delay_ok;
-        int delay = 1;
-        delay = QInputDialog::getInt(this, tr("Set Delay"), tr("Delay"), 2, 1, 20, 1, &delay_ok);
-
-        if (!delay_ok)
-          return;
-
-        g_settings.dojo.delay = delay;
-
-        bool host_ok;
-        QString host =
-          QInputDialog::getText(this, tr("Enter Host"), tr("Host"), QLineEdit::Normal, "127.0.0.1", &host_ok);
-
-        if (!host_ok || host.isEmpty())
-          return;
-
-        Dojo::Net::host_server = host.toStdString();
-
-        bool port_ok;
-        QString port = QInputDialog::getText(this, tr("Enter Port"), tr("Port"), QLineEdit::Normal, "6000", &port_ok);
-
-        if (!port_ok || port.isEmpty())
-          return;
-
-        Dojo::Net::host_port = port.toStdString();
-
-        g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
+        g_emu_thread->bootSystem(std::move(boot_params));
       });
 
       menu.addSeparator();
     }
+    /*
+    connect(menu.addAction(tr("Start Training")), &QAction::triggered, [this, entry]() {
+      g_settings.dojo.enabled = true;
+      g_settings.dojo.training = true;
+      g_settings.dojo.replay = false;
+      g_emu_thread->bootSystem(std::make_shared<SystemBootParameters>(entry->path));
+    });
+    */
 
     QAction* action = menu.addAction(tr("Properties..."));
     connect(action, &QAction::triggered,

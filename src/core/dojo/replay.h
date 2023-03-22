@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iomanip>
+#include <filesystem>
 
 namespace Dojo::Replay {
   static u32 replay_frame_count;

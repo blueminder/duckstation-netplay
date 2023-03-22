@@ -248,7 +248,7 @@ void AnalogController::SetBindState(u32 index, float value)
   }
 
   const u16 bit = u16(1) << static_cast<u8>(index);
-  u16 last = ~Dojo::Session::GetLastHeldInput(index);
+  u16 last = ~Dojo::Session::GetLastHeldInput(m_index);
 
   if (value >= m_button_deadzone)
   {

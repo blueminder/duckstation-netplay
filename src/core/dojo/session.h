@@ -10,10 +10,10 @@
 #include "core/host.h"
 
 namespace Dojo::Session {
-  static bool enabled = false;
-  static bool record = false;
-  static bool replay = false;
-  static bool receive = false;
+  inline bool enabled = false;
+  inline bool record = false;
+  inline bool replay = false;
+  inline bool receive = false;
 
   inline u32 index;
   inline u32 delay;
@@ -36,7 +36,7 @@ namespace Dojo::Session {
   u16 GetLastHeldInput(u8 slot);
   void SetLastHeldInput(u8 slot, u16 button_state);
 
-  void Init(std::string game_title);
+  void Init(std::string game_title, bool record, bool replay);
   void FrameAction();
   void ControllerFrameAction(u8 slot);
 

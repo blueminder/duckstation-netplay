@@ -231,7 +231,7 @@ struct Settings
   struct DojoSettings
   {
     bool enabled = true;
-    bool record = false;
+    bool record = true;
     bool replay = false;
     bool training = false;
     bool receive = false;
