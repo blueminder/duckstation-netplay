@@ -6,6 +6,7 @@
 #include "host.h"
 #include "system.h"
 #include "util/state_wrapper.h"
+#include "core/dojo/dojo.h"
 
 DigitalController::DigitalController(u32 index) : Controller(index) {}
 
@@ -54,12 +55,14 @@ void DigitalController::SetBindState(u32 index, float value)
 
   const bool pressed = (value >= 0.5f);
   const u16 bit = u16(1) << static_cast<u8>(index);
+  u16 last = ~Dojo::Session::GetLastHeldInput(index);
   if (pressed)
   {
     if (m_button_state & bit)
       System::SetRunaheadReplayFlag();
 
     m_button_state &= ~bit;
+    Dojo::Session::SetLastHeldInput(m_index, (last & ~bit) ^ 0xFFFF);
   }
   else
   {
@@ -67,12 +70,18 @@ void DigitalController::SetBindState(u32 index, float value)
       System::SetRunaheadReplayFlag();
 
     m_button_state |= bit;
+    Dojo::Session::SetLastHeldInput(m_index, (last | bit) ^ 0xFFFF);
   }
 }
 
 u32 DigitalController::GetButtonStateBits() const
 {
   return m_button_state ^ 0xFFFF;
+}
+
+void DigitalController::SetButtonStateBits(u32 button_state_bits)
+{
+  m_button_state = ~(button_state_bits ^ 0xFFFF);
 }
 
 void DigitalController::ResetTransferState()

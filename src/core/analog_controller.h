@@ -73,6 +73,7 @@ public:
   float GetBindState(u32 index) const override;
   void SetBindState(u32 index, float value) override;
   u32 GetButtonStateBits() const override;
+  void SetButtonStateBits(u32 button_state_bits) override;
   std::optional<u32> GetAnalogInputBytes() const override;
 
   void ResetTransferState() override;

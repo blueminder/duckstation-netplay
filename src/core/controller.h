@@ -78,6 +78,9 @@ public:
   /// Returns a bitmask of the current button states, 1 = on.
   virtual u32 GetButtonStateBits() const;
 
+  /// Changes the specified button state bits.
+  virtual void SetButtonStateBits(u32 button_state_bits);
+
   /// Returns true if the controller supports analog mode, and it is active.
   virtual bool InAnalogMode() const;
 
