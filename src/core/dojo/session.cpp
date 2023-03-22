@@ -48,8 +48,11 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
     }
   }
 
-  if (replay && net_inputs[slot].count(index) == 0)
-    session_ended = true;
+  if (slot == 0)
+  {
+    if (replay && net_inputs[slot].count(index + 1) == 0)
+      session_ended = true;
+  }
 
   if (replay || receive)
   {
@@ -75,8 +78,7 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
       }
     }
 
-    if (((slot == 0 && !Training::enabled) || Training::enabled)
-      && net_inputs[target_slot].count(index + delay) == 0)
+    if (net_inputs[target_slot].count(index + delay) == 0)
     {
       target_frame = Frame::Create(index, target_slot, delay, last_held_input[slot]);
       AddNetFrame(target_frame.data());
@@ -87,7 +89,7 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
 
     current_frame = net_frames[slot][index];
 
-    //if (record)
+    if (record)
       Replay::AppendFrameToFile(current_frame);
 
     if (Net::Transmitter::enabled)
@@ -113,12 +115,16 @@ void Dojo::Session::UpdateActivePlayers()
 
 u16 Dojo::Session::GetLastHeldInput(u8 slot)
 {
+  if (slot > last_held_input.size() - 1)
+    return 0;
+
   return last_held_input[slot];
 }
 
 void Dojo::Session::SetLastHeldInput(u8 slot, u16 button_state)
 {
-  last_held_input[slot] = button_state;
+  if (slot < last_held_input.size())
+    last_held_input[slot] = button_state;
 }
 
 void Dojo::Session::AddNetFrame(const char* received_data)
@@ -175,13 +181,13 @@ void Dojo::Session::FillStartFrames(u32 start_frame, int total_players = 2)
   }
 }
 
-void Dojo::Session::Init(std::string game_title)
+void Dojo::Session::Init(std::string game_title, bool p_record, bool p_replay)
 {
   enabled = g_settings.dojo.enabled;
   record = g_settings.dojo.record;
-  //record = true;
-  //replay = g_settings.dojo.replay;
-  replay = true;
+
+  replay = p_replay;
+
   delay = g_settings.dojo.delay;
   receive = g_settings.dojo.receive;
 

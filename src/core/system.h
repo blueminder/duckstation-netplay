@@ -45,6 +45,7 @@ struct SystemBootParameters
   std::optional<bool> override_fast_boot;
   std::optional<bool> override_fullscreen;
   std::optional<bool> override_start_paused;
+  std::optional<bool> replay;
   u32 media_playlist_index = 0;
   bool load_image_to_ram = false;
   bool force_software_renderer = false;

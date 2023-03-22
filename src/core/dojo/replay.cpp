@@ -21,9 +21,14 @@ std::string Dojo::Replay::CreateReplayFile(std::string game_name)
   // create timestamp string, iso8601 format
   std::string timestamp = currentISO8601TimeUTC();
   std::replace(timestamp.begin(), timestamp.end(), ':', '_');
-  std::string filename = Path::Combine(EmuFolders::DataRoot, "replays/" + game_name + "_" + timestamp);
+  std::string replay_folder = Path::Combine(EmuFolders::DataRoot, "replays");
+  std::string filename = replay_folder + "/" + game_name + "_" + timestamp;
 
   filename.append(".duckr");
+
+  // check for replay folder, create if it does not exist
+  if (!std::filesystem::is_directory(replay_folder))
+    std::filesystem::create_directory(replay_folder);
 
   // create replay file itself
   Session::replay_filename = filename;

@@ -55,7 +55,7 @@ void DigitalController::SetBindState(u32 index, float value)
 
   const bool pressed = (value >= 0.5f);
   const u16 bit = u16(1) << static_cast<u8>(index);
-  u16 last = ~Dojo::Session::GetLastHeldInput(index);
+  u16 last = ~Dojo::Session::GetLastHeldInput(m_index);
   if (pressed)
   {
     if (m_button_state & bit)
