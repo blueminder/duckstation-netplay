@@ -70,6 +70,8 @@
 #include "frontend-common/vulkan_host_display.h"
 #endif
 
+#include "core/dojo/dojo.h"
+
 Log_SetChannel(CommonHostInterface);
 
 namespace CommonHost {
@@ -351,6 +353,16 @@ void CommonHost::SetDefaultHotkeyBindings(SettingsInterface& si)
   si.SetStringValue("Hotkeys", "SaveSelectedSaveState", "Keyboard/F2");
   si.SetStringValue("Hotkeys", "SelectPreviousSaveStateSlot", "Keyboard/F3");
   si.SetStringValue("Hotkeys", "SelectNextSaveStateSlot", "Keyboard/F4");
+
+  si.SetStringValue("Hotkeys", "ToggleInputRecording1", "Keyboard/Numpad1");
+  si.SetStringValue("Hotkeys", "ToggleInputRecording2", "Keyboard/Numpad2");
+  si.SetStringValue("Hotkeys", "ToggleInputRecording3", "Keyboard/Numpad3");
+  si.SetStringValue("Hotkeys", "ToggleInputPlayback1", "Keyboard/Numpad4");
+  si.SetStringValue("Hotkeys", "ToggleInputPlayback2", "Keyboard/Numpad5");
+  si.SetStringValue("Hotkeys", "ToggleInputPlayback3", "Keyboard/Numpad6");
+  si.SetStringValue("Hotkeys", "ToggleRandomPlayback", "Keyboard/Numpad0");
+  si.SetStringValue("Hotkeys", "TogglePlaybackLoop", "Keyboard/NumpadPeriod");
+  si.SetStringValue("Hotkeys", "TogglePlayerSwap", "Keyboard/NumpadPlus");
 #endif
 }
 
@@ -1053,6 +1065,80 @@ DEFINE_HOTKEY("AudioVolumeDown", TRANSLATABLE("Hotkeys", "Audio"), TRANSLATABLE(
                 }
               })
 
+#ifndef __ANDROID__
+DEFINE_HOTKEY("ToggleInputRecording1", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Record Slot 1"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                    const std::string msg = Dojo::Training::ToggleRecording(0);
+                    Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleInputRecording2", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Record Slot 2"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid())
+                {
+                  const std::string msg = Dojo::Training::ToggleRecording(1);
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleInputRecording3", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Record Slot 3"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::ToggleRecording(2);
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleInputPlayback1", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Play Slot 1"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::TogglePlayback(0);
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleInputPlayback2", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Play Slot 2"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::TogglePlayback(1);
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleInputPlayback3", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Play Slot 3"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::TogglePlayback(2);
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("ToggleRandomPlayback", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Play Random Slot"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::ToggleRandomPlayback();
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("TogglePlaybackLoop", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Toggle Playback Loop"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::ToggleLoop();
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+DEFINE_HOTKEY("TogglePlayerSwap", TRANSLATABLE("Hotkeys", "Training"), TRANSLATABLE("Hotkeys", "Toggle Player Swap"),
+              [](s32 pressed) {
+                if (!pressed && System::IsValid() && Dojo::Training::enabled)
+                {
+                  const std::string msg = Dojo::Training::TogglePlayerSwap();
+                  Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+                }
+              })
+#endif
 // NOTE: All save/load state hotkeys are deferred, because it can trigger setting reapply, which reloads bindings.
 DEFINE_HOTKEY("LoadSelectedSaveState", TRANSLATABLE("Hotkeys", "Save States"),
               TRANSLATABLE("Hotkeys", "Load From Selected Slot"), [](s32 pressed) {

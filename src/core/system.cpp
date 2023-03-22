@@ -1281,7 +1281,8 @@ bool System::BootSystem(SystemBootParameters parameters)
   UpdateMultitaps();
 
   bool enable_replay = parameters.replay.has_value() ? parameters.replay.value() : false;
-  if (g_settings.dojo.record || enable_replay)
+  bool enable_training = parameters.training.has_value() ? parameters.training.value() : false;
+  if (g_settings.dojo.record || enable_replay || enable_training)
   {
     auto game_title = s_running_game_title;
     if (game_title.empty())
@@ -1289,7 +1290,7 @@ bool System::BootSystem(SystemBootParameters parameters)
       std::filesystem::path game_path = exe_boot;
       game_title = game_path.stem().string();
     }
-    Dojo::Session::Init(game_title, g_settings.dojo.record, enable_replay);
+    Dojo::Session::Init(game_title, g_settings.dojo.record, enable_replay, enable_training);
   }
 
   InternalReset();

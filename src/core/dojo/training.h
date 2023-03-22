@@ -1,5 +1,5 @@
 namespace Dojo::Training {
-  static bool enabled = false;
+  inline bool enabled = false;
   static bool recording;
   inline std::vector<std::string> record_slot[3];
   inline std::set<int> recorded_slots;

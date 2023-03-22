@@ -36,7 +36,7 @@ namespace Dojo::Session {
   u16 GetLastHeldInput(u8 slot);
   void SetLastHeldInput(u8 slot, u16 button_state);
 
-  void Init(std::string game_title, bool record, bool replay);
+  void Init(std::string game_title, bool record, bool replay, bool training);
   void FrameAction();
   void ControllerFrameAction(u8 slot);
 
