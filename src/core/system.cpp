@@ -1280,9 +1280,14 @@ bool System::BootSystem(SystemBootParameters parameters)
   UpdateMemoryCardTypes();
   UpdateMultitaps();
 
+  bool enable_record = Dojo::Session::record;
+  if (!Dojo::Session::record)
+    enable_record = g_settings.dojo.record;
+
   bool enable_replay = parameters.replay.has_value() ? parameters.replay.value() : false;
   bool enable_training = parameters.training.has_value() ? parameters.training.value() : false;
-  if (g_settings.dojo.record || enable_replay || enable_training)
+
+  if (Dojo::Session::enabled)
   {
     auto game_title = s_running_game_title;
     if (game_title.empty())
@@ -1290,7 +1295,7 @@ bool System::BootSystem(SystemBootParameters parameters)
       std::filesystem::path game_path = exe_boot;
       game_title = game_path.stem().string();
     }
-    Dojo::Session::Init(game_title, g_settings.dojo.record, enable_replay, enable_training);
+    Dojo::Session::Init(game_title, enable_replay, enable_training);
   }
 
   InternalReset();

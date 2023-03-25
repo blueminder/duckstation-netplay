@@ -231,13 +231,13 @@ struct Settings
   struct DojoSettings
   {
     bool enabled = true;
-    bool record = true;
+    bool record = false;
     bool replay = false;
     bool training = false;
     bool receive = false;
     bool transmit = false;
     bool hosting = false;
-    u32 delay = 10;
+    u32 delay = 0;
     u32 num_back_frames = 3;
     u32 num_packets = 2;
   } dojo;
