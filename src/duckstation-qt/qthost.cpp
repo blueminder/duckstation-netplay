@@ -60,6 +60,8 @@ Log_SetChannel(EmuThread);
 #include "frontend-common/achievements.h"
 #endif
 
+#include "core/dojo/dojo.h"
+
 static constexpr u32 SETTINGS_VERSION = 3;
 static constexpr u32 SETTINGS_SAVE_DELAY = 1000;
 
@@ -2097,6 +2099,73 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         continue;
       }
 #endif
+      // dojo
+      else if (CHECK_ARG("-train"))
+      {
+        Log_InfoPrintf("Command Line: Starting training mode.");
+        Dojo::Session::enabled = true;
+        AutoBoot(autoboot)->training = true;
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-delay"))
+      {
+        Dojo::Session::delay = args[++i].toInt();
+        Log_InfoPrintf("Command Line: Setting offline delay: %d", Dojo::Session::delay);
+        continue;
+      }
+      else if (CHECK_ARG("-record"))
+      {
+        Log_InfoPrintf("Command Line: Enable session recording.");
+        Dojo::Session::enabled = true;
+        Dojo::Session::record = true;
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-replay"))
+      {
+        std::string replay_filename = args[++i].toStdString();
+        Log_InfoPrintf("Command Line: Opening replay file: '%s'", replay_filename.c_str());
+        if (!replay_filename.empty())
+        {
+          Dojo::Session::enabled = true;
+          AutoBoot(autoboot)->replay = true;
+          Dojo::Session::SetReplayFilename(replay_filename);
+        }
+        continue;
+      }
+      else if (CHECK_ARG("-hosting"))
+      {
+        Log_InfoPrintf("Command Line: Set as receiving server.");
+        Dojo::Net::hosting = true;
+        continue;
+      }
+      else if (CHECK_ARG("-receive"))
+      {
+        Log_InfoPrintf("Command Line: Receiving incoming game session.");
+        Dojo::Session::enabled = true;
+        Dojo::Session::receive = true;
+        continue;
+      }
+      /*
+      else if (CHECK_ARG("-transmit"))
+      {
+        Log_InfoPrintf("Command Line: Transmitting current game session.");
+        Dojo::Session::enabled = true;
+        Dojo::Net::Transmitter::enabled = true;
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-transmit_server"))
+      {
+        Dojo::Net::transmit_server = args[++i].toStdString();
+        Log_InfoPrintf("Command Line: Assigning transmission server: %s", Dojo::Net::transmit_server.c_str());
+        continue;
+      }
+      */
+      else if (CHECK_ARG_PARAM("-transmit_port"))
+      {
+        Dojo::Net::transmit_port = args[++i].toStdString();
+        Log_InfoPrintf("Command Line: Assigning transmission port: %s", Dojo::Net::transmit_server.c_str());
+        continue;
+      }
       else if (CHECK_ARG("--"))
       {
         no_more_args = true;

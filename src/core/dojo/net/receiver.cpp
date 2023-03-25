@@ -88,7 +88,7 @@ void Dojo::Net::Receiver::ServerThread()
   try
   {
     asio::io_context io_context;
-    AsyncTcp::Server s(io_context, 7000);
+    AsyncTcp::Server s(io_context, std::stoi(Net::transmit_port));
     io_context.run();
   }
   catch (std::exception& e)

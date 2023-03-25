@@ -181,19 +181,22 @@ void Dojo::Session::FillStartFrames(u32 start_frame, int total_players = 2)
   }
 }
 
-void Dojo::Session::Init(std::string game_title, bool p_record, bool p_replay, bool p_training)
+void Dojo::Session::Init(std::string game_title, bool p_replay, bool p_training)
 {
-  enabled = g_settings.dojo.enabled;
-  record = g_settings.dojo.record;
-
   replay = p_replay;
-
-  delay = g_settings.dojo.delay;
-  receive = g_settings.dojo.receive;
-
   Training::enabled = p_training;
-  Net::hosting = g_settings.dojo.hosting;
-  Net::Transmitter::enabled = g_settings.dojo.transmit;
+
+  if (!enabled)
+    enabled = enabled || g_settings.dojo.enabled;
+
+  if (!record)
+    record = g_settings.dojo.record;
+
+  if (delay == 0)
+    delay = g_settings.dojo.delay;
+
+  if (!receive)
+    receive = g_settings.dojo.receive;
 
   Net::Udp::num_back_frames = g_settings.dojo.num_back_frames;
   Net::Udp::num_packets = g_settings.dojo.num_packets;
