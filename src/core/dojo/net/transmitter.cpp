@@ -16,6 +16,8 @@ void Dojo::Net::Transmitter::StartThread()
 
 void Dojo::Net::Transmitter::ClientThread()
 {
+  while (Dojo::Session::net_inputs[1].size() < 60);
+
   try
   {
     asio::io_context io_context;
@@ -63,12 +65,14 @@ void Dojo::Net::Transmitter::ClientThread()
 
       if (transmission_in_progress)
       {
+        auto lock = std::unique_lock<std::mutex>(Dojo::Session::tx_guard);
+
         current_frame = Dojo::Session::transmission_frames.front();
-        //u32 frame_num = GetFrameNumber((u8*)current_frame.data());
-
         frame_msg.AppendContinuousData(current_frame.data(), FRAME_SIZE);
-
         Dojo::Session::transmission_frames.pop_front();
+
+        lock.unlock();
+
         sent_frame_count++;
 
         // send packet every 60 frames

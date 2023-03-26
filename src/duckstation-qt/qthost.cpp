@@ -2158,7 +2158,6 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         Dojo::Session::receive = true;
         continue;
       }
-      /*
       else if (CHECK_ARG("-transmit"))
       {
         Log_InfoPrintf("Command Line: Transmitting current game session.");
@@ -2172,7 +2171,6 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         Log_InfoPrintf("Command Line: Assigning transmission server: %s", Dojo::Net::transmit_server.c_str());
         continue;
       }
-      */
       else if (CHECK_ARG_PARAM("-transmit_port"))
       {
         Dojo::Net::transmit_port = args[++i].toStdString();

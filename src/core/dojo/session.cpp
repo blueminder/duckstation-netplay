@@ -56,6 +56,9 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
 
   if (replay || receive)
   {
+    if (disconnect_frame > 0 && index == disconnect_frame)
+      Session::disconnect_toggle = true;
+
     p->SetButtonStateBits(~net_inputs[slot][index]);
   }
   else
@@ -85,6 +88,14 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
       versus_frames.push_back(target_frame);
     }
 
+    if (receive && index > net_inputs[1].size() - 2)
+    {
+      Host::RunOnCPUThread([]() { System::PauseSystem(true); });
+      receiver_buffered = false;
+      std::string msg = "Buffering...";
+      Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+    }
+
     p->SetButtonStateBits(~net_inputs[slot][index]);
 
     current_frame = net_frames[slot][index];
@@ -93,7 +104,11 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
       Replay::AppendFrameToFile(current_frame);
 
     if (Net::Transmitter::enabled)
+    {
+      auto lock = std::unique_lock<std::mutex>(tx_guard);
       transmission_frames.push_back(current_frame);
+      lock.unlock();
+    }
 
     if (Training::enabled)
       Training::TrainingFrameAction();
@@ -132,11 +147,17 @@ void Dojo::Session::AddNetFrame(const char* received_data)
   const char data[FRAME_SIZE] = { 0 };
   memcpy((void*)data, received_data, FRAME_SIZE);
 
+  // disconnect on blank frame
+  if (memcmp(data, "000000000000", FRAME_SIZE) == 0)
+    Session::disconnect_frame = net_inputs[1].size() - 2;
+
   u32 effective_frame_num = Frame::GetEffectiveFrameNumber((u8*)data);
   if (effective_frame_num == 0)
     return;
 
   u32 frame_player = (u8)data[0];
+  if (frame_player > 2)
+    return;
 
   std::string data_to_queue(data, data + FRAME_SIZE);
 
@@ -152,6 +173,13 @@ void Dojo::Session::AddNetFrame(const char* received_data)
   {
     if (effective_frame_num == last_consecutive_common_frame + 1)
       last_consecutive_common_frame++;
+  }
+
+  if (receive && !receiver_buffered && System::IsPaused
+      && net_inputs[1].size() > 1800 && net_inputs[1].size() > (index + 1800))
+  {
+    Host::RunOnCPUThread([]() { System::PauseSystem(false); });
+    receiver_buffered = true;
   }
 }
 
@@ -207,6 +235,14 @@ void Dojo::Session::Init(std::string game_title, bool p_replay, bool p_training)
   // only record live sessions
   if (record && replay)
     record = false;
+
+  if (receive)
+  {
+    Host::RunOnCPUThread([]() { System::PauseSystem(true); });
+    receiver_buffered = false;
+    std::string msg = "Buffering...";
+    Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+  }
 
   for (u32 i = 0; i < NUM_CONTROLLER_AND_CARD_PORTS; i++)
   {
