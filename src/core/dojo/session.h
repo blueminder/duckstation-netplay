@@ -45,8 +45,10 @@ namespace Dojo::Session {
   inline std::string current_frame;
   inline std::string target_frame;
 
+  inline bool receiver_buffered = false;
   inline bool receiver_started = false;
   inline bool receiver_ended = false;
+  inline u32 disconnect_frame = 0;
 
   inline bool session_ended = false;
   inline u32 frame_timeout = 0;
@@ -63,5 +65,5 @@ namespace Dojo::Session {
 
   inline u32 last_consecutive_common_frame;
 
+  inline std::mutex tx_guard;
 } // namespace Dojo::Session
-
