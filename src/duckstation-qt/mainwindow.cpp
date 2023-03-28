@@ -1402,16 +1402,17 @@ void MainWindow::onGameListEntryContextMenuRequested(const QPoint& point)
       connect(menu.addAction(tr("Open Replay")), &QAction::triggered, [this, entry]() {
         auto boot_params = std::make_shared<SystemBootParameters>(entry->path);
 
-        boot_params->replay = true;
         std::string replay_folder = Path::Combine(EmuFolders::DataRoot, "replays");
+
         const QString filename =
           QFileDialog::getOpenFileName(this, tr("Open Replay File"), QString::fromStdString(replay_folder), tr("Replay Files (*.duckr)"));
 
         if (filename.isEmpty())
           return;
 
-        Dojo::Session::enabled = true;
         Dojo::Session::SetReplayFilename(filename.toStdString());
+        Dojo::Session::enabled = true;
+        boot_params->replay = true;
         g_emu_thread->bootSystem(std::move(boot_params));
       });
 
@@ -1420,6 +1421,7 @@ void MainWindow::onGameListEntryContextMenuRequested(const QPoint& point)
 
     connect(menu.addAction(tr("Start Training")), &QAction::triggered, [this, entry]() {
       auto boot_params = std::make_shared<SystemBootParameters>(entry->path);
+
       Dojo::Session::enabled = true;
       boot_params->training = true;
       g_emu_thread->bootSystem(std::move(boot_params));

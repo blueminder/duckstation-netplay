@@ -2,6 +2,12 @@
 
 void Dojo::Session::FrameAction()
 {
+  if (System::GetInternalFrameNumber() == 0)
+    return;
+
+  if (System::GetInternalFrameNumber() == 1)
+    index = 1;
+
   if (disconnect_toggle && disconnect_sent)
   {
     Host::AddOSDMessage("Session Ended", 10.0f);
@@ -248,6 +254,8 @@ void Dojo::Session::Init(std::string game_title, bool p_replay, bool p_training)
   {
     last_held_input[i] = 0;
   }
+
+  Host::RunOnCPUThread([]() { System::FastForwardToGameStart(); });
 
   Replay::replay_frame_count = 0;
   if (record)
