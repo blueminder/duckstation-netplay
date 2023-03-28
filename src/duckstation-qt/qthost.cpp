@@ -99,6 +99,13 @@ static bool s_nogui_mode = false;
 static bool s_start_fullscreen_ui = false;
 static bool s_start_fullscreen_ui_fullscreen = false;
 
+static bool s_start_netplay = false;
+static int s_local_handle;
+static int s_local_port;
+static std::string s_remote_addr;
+static int s_remote_port;
+static int s_input_delay;
+
 EmuThread* g_emu_thread;
 GDBServer* g_gdb_server;
 
@@ -2177,6 +2184,38 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         Log_InfoPrintf("Command Line: Assigning transmission port: %s", Dojo::Net::transmit_server.c_str());
         continue;
       }
+      // ggpo
+      else if (CHECK_ARG("-netplay"))
+      {
+        Log_InfoPrintf("Command Line: Enabling Netplay.");
+        s_start_netplay = true;
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-player_assign"))
+      {
+        s_local_handle = args[++i].toInt();
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-local_port"))
+      {
+        s_local_port = args[++i].toInt();
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-server"))
+      {
+        s_remote_addr = args[++i].toStdString();
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-remote_port"))
+      {
+        s_remote_port = args[++i].toInt();
+        continue;
+      }
+      else if (CHECK_ARG("-delay"))
+      {
+        s_input_delay = args[++i].toInt();
+        continue;
+      }
       else if (CHECK_ARG("--"))
       {
         no_more_args = true;
@@ -2301,8 +2340,21 @@ int main(int argc, char* argv[])
   else
     s_start_fullscreen_ui_fullscreen = false;
 
+  if (s_start_netplay)
+  {
+    // disable block linking and disable rewind and runahead during a netplay session
+    g_settings.cpu_recompiler_block_linking = false;
+    g_settings.rewind_enable = false;
+    g_settings.runahead_frames = 0;
+
+    const QString& q_server = QString::fromStdString(s_remote_addr);
+    const QString& q_filename = QString::fromStdString(autoboot->filename);
+
+    g_emu_thread->startNetplaySession(s_local_handle, (quint16)s_local_port, q_server, (quint16)s_remote_port, s_input_delay,
+                                      q_filename);
+  }
   // Skip the update check if we're booting a game directly.
-  if (autoboot)
+  else if (autoboot)
     g_emu_thread->bootSystem(std::move(autoboot));
   else if (!s_nogui_mode)
     main_window->startupUpdateCheck();

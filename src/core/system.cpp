@@ -1323,6 +1323,9 @@ bool System::BootSystem(SystemBootParameters parameters)
     return false;
   }
 
+  if (Dojo::Session::enabled)
+    parameters.override_fast_boot = true;
+
   // Insert CD, and apply fastboot patch if enabled.
   if (media)
     CDROM::InsertMedia(std::move(media));
@@ -2290,9 +2293,6 @@ void System::DoRunFrame()
 
 void System::RunFrame()
 {
-  if (Dojo::Session::enabled)
-    Dojo::Session::FrameAction();
-
   if (s_rewind_load_counter >= 0)
   {
     DoRewind();
@@ -4527,6 +4527,18 @@ void System::SetTimerResolutionIncreased(bool enabled)
 #endif
 }
 
+void System::FastForwardToGameStart()
+{
+  if (s_internal_frame_number < 2)
+  {
+    // Fast Forward to Game Start // Skip this when using savestates
+    SPU::SetAudioOutputMuted(true);
+    while (s_internal_frame_number < 2)
+      System::DoRunFrame();
+    SPU::SetAudioOutputMuted(false);
+  }
+}
+
 void System::StartNetplaySession(s32 local_handle, u16 local_port, std::string& remote_addr, u16 remote_port,
                                  s32 input_delay, std::string& game_path)
 {
@@ -4602,10 +4614,6 @@ void System::FastForwardAndSetNetplayOptions()
   Log_WarningPrintf("Disabling block linking, runahead and rewind due to rollback.");
   System::ApplySettings(true);
   // Fast Forward to Game Start. Skip this when using savestates
-  SPU::SetAudioOutputMuted(true);
-  while (s_internal_frame_number < 2)
-    System::DoRunFrame();
-  SPU::SetAudioOutputMuted(false);
 }
 
 void System::StopNetplaySession()

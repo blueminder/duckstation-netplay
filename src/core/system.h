@@ -464,6 +464,7 @@ bool LoadRewindState(u32 skip_saves = 0, bool consume_state = true);
 void SetRunaheadReplayFlag();
 
 /// Netplay
+void FastForwardToGameStart();
 void StartNetplaySession(s32 local_handle, u16 local_port, std::string& remote_addr, u16 remote_port, s32 input_delay,
                          std::string& game_path);
 void StartNetplaySessionTraversal(std::vector<u16> handles, std::vector<std::string> addresses, std::vector<u16> ports,
