@@ -18,6 +18,9 @@ namespace Dojo::Session {
   inline u32 index;
   inline u32 delay;
 
+  inline int last_added = 0;
+  inline int last_rb = 0;
+
   inline std::string replay_filename = "replays/game_timestamp.duckr";
 
   void SetReplayFilename(std::string filename);
@@ -37,6 +40,7 @@ namespace Dojo::Session {
   void SetLastHeldInput(u8 slot, u16 button_state);
 
   void Init(std::string game_title, bool replay, bool training);
+  void NetSyncAction(Netplay::Input* inputs);
   void FrameAction();
   void ControllerFrameAction(u8 slot);
 

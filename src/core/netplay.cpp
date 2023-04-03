@@ -4,6 +4,8 @@
 #include "system.h"
 #include <bitset>
 
+#include <core/dojo/dojo.h>
+
 // Netplay Impl
 Netplay::Session::Session() = default;
 
@@ -114,6 +116,9 @@ void Netplay::Session::RunFrame(int32_t& waitTime)
     result = SyncInput(inputs, &disconnectFlags);
     if (GGPO_SUCCEEDED(result))
     {
+      // record synced inputs
+      Dojo::Session::NetSyncAction(inputs);
+
       // enable again when rolling back done
       SPU::SetAudioOutputMuted(false);
       System::NetplayAdvanceFrame(inputs, disconnectFlags);

@@ -1,12 +1,64 @@
 #include "dojo.h"
 
+Log_SetChannel(Dojo);
+
+// call after ggpo inputs are synced
+void Dojo::Session::NetSyncAction(Netplay::Input *inputs)
+{
+  if (!enabled)
+    return;
+
+  u32 frame_num = index;
+  for (int i = 0; i < 2; ++i)
+  {
+    if (last_rb > 0)
+    {
+      for (int j = 1; j <= last_rb; j++)
+      {
+        Log_InfoPrintf("Write Frame: %d", frame_num - j);
+        net_inputs[i][frame_num - j] = inputs[i].button_data;
+        if (net_inputs[i][frame_num - j] > 0)
+          Log_InfoPrintf("Index: %u, GGPO: %u, Internal: %u, P%u: %u ***", frame_num - j, Netplay::Session::CurrentFrame() - j, System::GetInternalFrameNumber(), i,
+                     net_inputs[i][frame_num - j]);
+      }
+      last_rb = 0;
+    }
+
+    net_inputs[i][frame_num] = inputs[i].button_data;
+
+    int confirmed = Netplay::Session::ConfirmedFrame();
+    if (confirmed > last_added)
+    {
+      for (int j = last_added; j < confirmed; j++)
+      {
+        std::string target_frame = Frame::Create(j, i, 0, net_inputs[i][j]);
+        net_frames[i][j] = target_frame;
+
+        if (record)
+          Replay::AppendFrameToFile(target_frame);
+
+        if (Net::Transmitter::enabled)
+        {
+          auto lock = std::unique_lock<std::mutex>(tx_guard);
+          transmission_frames.push_back(target_frame);
+          lock.unlock();
+        }
+      }
+
+      if (i == 1)
+        last_added = confirmed;
+    }
+
+  }
+}
+
 void Dojo::Session::FrameAction()
 {
   if (System::GetInternalFrameNumber() == 0)
     return;
 
-  if (System::GetInternalFrameNumber() == 1)
-    index = 1;
+  if (Netplay::Session::IsActive())
+    index = Netplay::Session::CurrentFrame();
 
   if (disconnect_toggle && disconnect_sent)
   {
@@ -30,6 +82,10 @@ void Dojo::Session::FrameAction()
     if (type == ControllerType::DigitalController || type == ControllerType::AnalogController)
     {
       ControllerFrameAction(i);
+
+      if (net_inputs[i][index] > 0)
+        Log_InfoPrintf("Index: %u, Internal: %u, P%u: %u ***", index, System::GetInternalFrameNumber(), i,
+                       net_inputs[i][index]);
     }
   }
 
@@ -87,33 +143,38 @@ void Dojo::Session::ControllerFrameAction(u8 slot)
       }
     }
 
-    if (net_inputs[target_slot].count(index + delay) == 0)
+    if (!Netplay::Session::IsActive())
     {
-      target_frame = Frame::Create(index, target_slot, delay, last_held_input[slot]);
-      AddNetFrame(target_frame.data());
-      versus_frames.push_back(target_frame);
-    }
+      if (net_inputs[target_slot].count(index + delay) == 0)
+      {
+        target_frame = Frame::Create(index, target_slot, delay, last_held_input[slot]);
+        AddNetFrame(target_frame.data());
+        versus_frames.push_back(target_frame);
+      }
 
-    if (receive && index > net_inputs[1].size() - 2)
-    {
-      Host::RunOnCPUThread([]() { System::PauseSystem(true); });
-      receiver_buffered = false;
-      std::string msg = "Buffering...";
-      Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
-    }
+      if (receive && index > net_inputs[1].size() - 2)
+      {
+        Host::RunOnCPUThread([]() { System::PauseSystem(true); });
+        receiver_buffered = false;
+        std::string msg = "Buffering...";
+        Host::AddOSDMessage(Host::TranslateStdString("OSDMessage", msg.data()), 10.0f);
+      }
 
-    p->SetButtonStateBits(~net_inputs[slot][index]);
+      p->SetButtonStateBits(~net_inputs[slot][index]);
 
-    current_frame = net_frames[slot][index];
+      Log_InfoPrintf("F %u P %u: %u          %u", index, (u32)slot, net_inputs[slot][index], System::GetInternalFrameNumber());
 
-    if (record)
-      Replay::AppendFrameToFile(current_frame);
+      current_frame = net_frames[slot][index];
 
-    if (Net::Transmitter::enabled)
-    {
-      auto lock = std::unique_lock<std::mutex>(tx_guard);
-      transmission_frames.push_back(current_frame);
-      lock.unlock();
+      if (record)
+        Replay::AppendFrameToFile(current_frame);
+
+      if (Net::Transmitter::enabled)
+      {
+        auto lock = std::unique_lock<std::mutex>(tx_guard);
+        transmission_frames.push_back(current_frame);
+        lock.unlock();
+      }
     }
 
     if (Training::enabled)
