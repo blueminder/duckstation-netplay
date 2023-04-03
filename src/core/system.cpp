@@ -4529,11 +4529,11 @@ void System::SetTimerResolutionIncreased(bool enabled)
 
 void System::FastForwardToGameStart()
 {
-  if (s_internal_frame_number < 2)
+  if (s_internal_frame_number < 1)
   {
     // Fast Forward to Game Start // Skip this when using savestates
     SPU::SetAudioOutputMuted(true);
-    while (s_internal_frame_number < 2)
+    while (s_internal_frame_number < 1)
       System::DoRunFrame();
     SPU::SetAudioOutputMuted(false);
   }
@@ -4660,7 +4660,6 @@ bool NpSaveFrameCb(void* ctx, uint8_t** buffer, int* len, int* checksum, int fra
   memcpy(*buffer, &dummyData, *len);
   // store state for later.
   int pred = Netplay::Session::GetMaxPrediction() + 2;
-  Log_InfoPrintf("cf: %d", Netplay::Session::ConfirmedFrame());
   if (frame < pred)
   {
     MemorySaveState save;
@@ -4681,7 +4680,17 @@ bool NpSaveFrameCb(void* ctx, uint8_t** buffer, int* len, int* checksum, int fra
 
 bool NpLoadFrameCb(void* ctx, uint8_t* buffer, int len, int rb_frames, int frame_to_load)
 {
-  // Log_InfoPrint("Load!");
+  Log_InfoPrintf("Load! Frame: %d, Rolled: %d", frame_to_load, rb_frames);
+  // clear inputs for remaining frames after rollback
+  for (int i = 0; i < rb_frames; i++)
+  {
+    Log_InfoPrintf("Clear Frame: %d", frame_to_load + i);
+    for (u32 j = 0; j < 2; j++)
+    {
+      Dojo::Session::net_inputs[j][frame_to_load + i] = 0;
+    }
+  }
+  Dojo::Session::last_rb = rb_frames;
   // Disable Audio For upcoming rollback
   SPU::SetAudioOutputMuted(true);
   return System::LoadMemoryState(s_netplay_states[frame_to_load % (Netplay::Session::GetMaxPrediction() + 2)]);
