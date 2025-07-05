@@ -98,8 +98,11 @@ static bool s_nogui_mode = false;
 static bool s_start_fullscreen_ui = false;
 static bool s_start_fullscreen_ui_fullscreen = false;
 
-// TODO: REMOVE ME
-static int s_netplay_test = -1;
+static int s_netplay = -1;
+static int s_port;
+static std::string s_remote_addr;
+static std::string s_nickname;
+static std::string s_game;
 
 EmuThread* g_emu_thread;
 GDBServer* g_gdb_server;
@@ -2086,7 +2089,12 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
       }
       else if (CHECK_ARG_PARAM("-netplay"))
       {
-        s_netplay_test = StringUtil::FromChars<int>(args[++i].toStdString()).value_or(0);
+        s_netplay = StringUtil::FromChars<int>(args[++i].toStdString()).value_or(0);
+        if (s_netplay == 0)
+        {
+          AutoBoot(autoboot)->override_fast_boot = true;
+          AutoBoot(autoboot)->fast_forward_to_first_frame = true;
+        }
         continue;
       }
 #ifdef WITH_RAINTEGRATION
@@ -2096,6 +2104,22 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         continue;
       }
 #endif
+      // ggpo
+      else if (CHECK_ARG_PARAM("-server"))
+      {
+        s_remote_addr = args[++i].toStdString();
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-port"))
+      {
+        s_port = args[++i].toInt();
+        continue;
+      }
+      else if (CHECK_ARG_PARAM("-nickname"))
+      {
+        s_nickname = args[++i].toStdString();
+        continue;
+      }
       else if (CHECK_ARG("--"))
       {
         no_more_args = true;
@@ -2114,6 +2138,7 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
     if (autoboot && !autoboot->filename.empty())
       autoboot->filename += ' ';
     AutoBoot(autoboot)->filename += args[i].toStdString();
+    s_game += args[i].toStdString();
   }
 
   // To do anything useful, we need the config initialized.
@@ -2226,27 +2251,19 @@ int main(int argc, char* argv[])
   else if (!s_nogui_mode)
     main_window->startupUpdateCheck();
 
-  if (s_netplay_test >= 0)
+  if (s_netplay >= 0)
   {
     Host::RunOnCPUThread([]() {
-      const bool first = (s_netplay_test == 0);
-      QtHost::RunOnUIThread([first]() { g_main_window->move(QPoint(first ? 300 : 1400, 500)); });
-
-      const int port = 31200;
-      const QString remote = QStringLiteral("127.0.0.1");
-      std::string game = "D:\\PSX\\chd\\padtest.chd";
-      const QString nickname = QStringLiteral("NICKNAME%1").arg(s_netplay_test + 1);
-      if (first)
+      const int port = s_port;
+      const QString server = QString::fromStdString(s_remote_addr);
+      const QString nickname = QString::fromStdString(s_nickname);
+      if (s_netplay == 0)
       {
-        auto params = std::make_shared<SystemBootParameters>(std::move(game));
-        params->override_fast_boot = true;
-        params->fast_forward_to_first_frame = true;
-        g_emu_thread->bootSystem(std::move(params));
         g_emu_thread->createNetplaySession(nickname, port, 2, QString());
       }
       else
       {
-        g_emu_thread->joinNetplaySession(nickname, remote, port, QString());
+        g_emu_thread->joinNetplaySession(nickname, server, port, QString());
       }
     });
   }

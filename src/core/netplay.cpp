@@ -905,25 +905,7 @@ void Netplay::HandleConnectResponseMessage(s32 player_id, const ENetPacket* pkt)
     return;
   }
 
-  // Find the matching game.
-  std::string game_path;
-  {
-    auto lock = GameList::GetLock();
-    const GameList::Entry* entry = GameList::GetEntryBySerialAndHash(msg->GetGameSerial(), msg->game_hash);
-    if (entry)
-      game_path = entry->path;
-  }
-  if (game_path.empty())
-  {
-    CloseSessionWithError(fmt::format(
-      Host::TranslateString("Netplay", "Cannot join session: Unable to find game \"{}\".\nSerial: {}\nHash: {}")
-        .GetCharArray(),
-      msg->GetGameTitle(), msg->GetGameSerial(), System::GetGameHashId(msg->game_hash)));
-    return;
-  }
-
   Log_InfoPrintf("Found matching BIOS: %s", bios_path.c_str());
-  Log_InfoPrintf("Found matching game: %s", game_path.c_str());
 
   // Apply settings from host.
   SetSettings(msg);
@@ -931,7 +913,6 @@ void Netplay::HandleConnectResponseMessage(s32 player_id, const ENetPacket* pkt)
   // Create system with host details.
   Assert(!System::IsValid());
   SystemBootParameters params;
-  params.filename = std::move(game_path);
   params.override_bios = std::move(bios_path);
   if (!System::BootSystem(std::move(params)))
   {
