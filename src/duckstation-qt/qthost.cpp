@@ -100,6 +100,7 @@ static bool s_start_fullscreen_ui_fullscreen = false;
 
 static int s_netplay = -1;
 static int s_port;
+static int s_local_port = 0;
 static int s_input_delay = 1;
 static std::string s_remote_addr;
 static std::string s_nickname;
@@ -1095,17 +1096,18 @@ void EmuThread::createNetplaySession(const QString& nickname, qint32 port, qint3
   }
 }
 
-void EmuThread::joinNetplaySession(const QString& nickname, const QString& hostname, qint32 port,
-                                   qint32 input_delay, const QString& password)
+void EmuThread::joinNetplaySession(const QString& nickname, const QString& hostname, qint32 local_port, 
+                                   qint32 port, qint32 input_delay, const QString& password)
 {
   if (!isOnThread())
   {
     QMetaObject::invokeMethod(this, "joinNetplaySession", Qt::QueuedConnection, Q_ARG(const QString&, nickname),
-                              Q_ARG(const QString&, hostname), Q_ARG(qint32, port), Q_ARG(qint32, input_delay), Q_ARG(const QString&, password));
+                              Q_ARG(const QString&, hostname), Q_ARG(qint32, local_port), Q_ARG(qint32, port),
+                              Q_ARG(qint32, input_delay), Q_ARG(const QString&, password));
     return;
   }
 
-  if (!Netplay::JoinSession(nickname.toStdString(), hostname.toStdString(), port, input_delay, password.toStdString()))
+  if (!Netplay::JoinSession(nickname.toStdString(), hostname.toStdString(), local_port, port, input_delay, password.toStdString()))
   {
     errorReported(tr("Netplay Error"), tr("Failed to join netplay session. The log may contain more information."));
     return;
@@ -2111,6 +2113,11 @@ bool QtHost::ParseCommandLineParametersAndInitializeConfig(QApplication& app,
         s_remote_addr = args[++i].toStdString();
         continue;
       }
+      else if (CHECK_ARG_PARAM("-local_port"))
+      {
+        s_local_port = args[++i].toInt();
+        continue;
+      }
       else if (CHECK_ARG_PARAM("-port"))
       {
         s_port = args[++i].toInt();
@@ -2260,6 +2267,7 @@ int main(int argc, char* argv[])
   if (s_netplay >= 0)
   {
     Host::RunOnCPUThread([]() {
+      const int local_port = s_local_port;
       const int port = s_port;
       const int input_delay = s_input_delay;
       const QString server = QString::fromStdString(s_remote_addr);
@@ -2270,7 +2278,7 @@ int main(int argc, char* argv[])
       }
       else
       {
-        g_emu_thread->joinNetplaySession(nickname, server, port, input_delay, QString());
+        g_emu_thread->joinNetplaySession(nickname, server, local_port, port, input_delay, QString());
       }
     });
   }

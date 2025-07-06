@@ -107,7 +107,7 @@ static void HandleChatMessage(s32 player_id, const ENetPacket* pkt);
 // GGPO session.
 static void CreateGGPOSession();
 static void DestroyGGPOSession();
-static bool Start(bool is_hosting, std::string nickname, const std::string& remote_addr, s32 port, s32 ldelay);
+static bool Start(bool is_hosting, std::string nickname, const std::string& remote_addr, s32 local_port, s32 port, s32 ldelay);
 static void CloseSession();
 
 // Host functions.
@@ -289,7 +289,7 @@ static const T* CheckReceivedPacket(s32 player_id, const ENetPacket* pkt)
 
 // Netplay Impl
 
-bool Netplay::Start(bool is_hosting, std::string nickname, const std::string& remote_addr, s32 port, s32 ldelay)
+bool Netplay::Start(bool is_hosting, std::string nickname, const std::string& remote_addr, s32 local_port, s32 port, s32 ldelay)
 {
   if (IsActive())
   {
@@ -301,6 +301,12 @@ bool Netplay::Start(bool is_hosting, std::string nickname, const std::string& re
   if (port < 0 || port >= 65535)
   {
     Log_ErrorPrintf("Invalid port %d", port);
+    return false;
+  }
+
+  if (local_port < 0 || local_port >= 65535)
+  {
+    Log_ErrorPrintf("Invalid local port %d", local_port);
     return false;
   }
 
@@ -338,7 +344,7 @@ bool Netplay::Start(bool is_hosting, std::string nickname, const std::string& re
   // Create our "host" (which is basically just our port).
   ENetAddress server_address;
   server_address.host = ENET_HOST_ANY;
-  server_address.port = is_hosting ? static_cast<u16>(port) : ENET_PORT_ANY;
+  server_address.port = is_hosting ? static_cast<u16>(port) : static_cast<u16>(local_port);
   s_enet_host = enet_host_create(&server_address, MAX_PLAYERS - 1, NUM_ENET_CHANNELS, 0, 0);
   if (!s_enet_host)
   {
@@ -1858,7 +1864,7 @@ bool Netplay::CreateSession(std::string nickname, s32 port, s32 max_players, s32
   // to have the same data, and we don't want to trash their local memcards. We should therefore load
   // the memory cards for this game (based on game/global settings), and copy that to the temp card.
 
-  if (!Netplay::Start(true, std::move(nickname), std::string(), port, input_delay))
+  if (!Netplay::Start(true, std::move(nickname), std::string(), 0, port, input_delay))
   {
     CloseSession();
     return false;
@@ -1872,11 +1878,11 @@ bool Netplay::CreateSession(std::string nickname, s32 port, s32 max_players, s32
   return true;
 }
 
-bool Netplay::JoinSession(std::string nickname, const std::string& hostname, s32 port, s32 input_delay, std::string password)
+bool Netplay::JoinSession(std::string nickname, const std::string& hostname, s32 local_port, s32 port, s32 input_delay, std::string password)
 {
   s_local_session_password = password;
 
-  if (!Netplay::Start(false, std::move(nickname), hostname, port, input_delay))
+  if (!Netplay::Start(false, std::move(nickname), hostname, local_port, port, input_delay))
   {
     CloseSession();
     return false;

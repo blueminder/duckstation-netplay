@@ -29,7 +29,7 @@ enum : u8
 };
 
 bool CreateSession(std::string nickname, s32 port, s32 max_players, s32 input_delay, std::string password);
-bool JoinSession(std::string nickname, const std::string& hostname, s32 port, s32 input_delay, std::string password);
+bool JoinSession(std::string nickname, const std::string& hostname, s32 local_port, s32 port, s32 input_delay, std::string password);
 
 bool IsActive();
 
