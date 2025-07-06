@@ -62,7 +62,6 @@ jobs:
         path: "duckstation-windows-x64-release.zip"
 
   linux-build:
-    if: false
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4

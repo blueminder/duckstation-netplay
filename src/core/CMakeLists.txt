@@ -105,6 +105,9 @@ add_library(core
     timing_event.cpp
     timing_event.h
     types.h
+    netplay.cpp
+    netplay.h
+    netplay_packets.h
 )
 
 set(RECOMPILER_SRCS
