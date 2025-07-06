@@ -38,7 +38,7 @@ void CreateNetplaySessionDialog::accept()
   const QString& password = m_ui.password->text();
   QDialog::accept();
 
-  g_emu_thread->createNetplaySession(nickname.trimmed(), port, players, password);
+  g_emu_thread->createNetplaySession(nickname.trimmed(), port, players, 1, password);
 }
 
 bool CreateNetplaySessionDialog::validate()
@@ -84,7 +84,7 @@ void JoinNetplaySessionDialog::accept()
   const QString& password = m_ui.password->text();
   QDialog::accept();
 
-  g_emu_thread->joinNetplaySession(nickname.trimmed(), hostname.trimmed(), port, password);
+  g_emu_thread->joinNetplaySession(nickname.trimmed(), hostname.trimmed(), port, 1, password);
 }
 
 bool JoinNetplaySessionDialog::validate()
