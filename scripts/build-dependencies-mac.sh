@@ -6,7 +6,7 @@ export MACOSX_DEPLOYMENT_TARGET=10.14
 INSTALLDIR="$HOME/deps"
 NPROCS="$(getconf _NPROCESSORS_ONLN)"
 SDL=SDL2-2.26.2
-QT=6.4.2
+QT=6.5.2
 MOLTENVK=1.2.2
 CURL=7.87.0
 
@@ -18,16 +18,6 @@ export LDFLAGS="-L$INSTALLDIR/lib -dead_strip $LDFLAGS"
 export CFLAGS="-I$INSTALLDIR/include -Os $CFLAGS"
 export CXXFLAGS="-I$INSTALLDIR/include -Os $CXXFLAGS"
 
-cat > SHASUMS <<EOF
-95d39bc3de037fbdfa722623737340648de4f180a601b0afad27645d150b99e0  $SDL.tar.gz
-8065a10c2d70b561f48475dedb118e643176527b162d6e439fa127270c2a07dd  v$MOLTENVK.tar.gz
-8a063d664d1c23d35526b87a2bf15514962ffdd8ef7fd40519191b3c23e39548  curl-$CURL.tar.gz
-a88bc6cedbb34878a49a622baa79cace78cfbad4f95fdbd3656ddb21c705525d  qtbase-everywhere-src-$QT.tar.xz
-b746af3cb1793621d8ed7eae38d9ad5a15541dc2742031069f2ae3fe87590314  qtsvg-everywhere-src-$QT.tar.xz
-a31387916184e4a5ef522d3ea841e8e931cc0f88be0824a7a354a572d5826c68  qttools-everywhere-src-$QT.tar.xz
-bbe0291502c2604b72fef730e1935bd22f8b921d8c473250f298a723b2a9c496  qttranslations-everywhere-src-$QT.tar.xz
-EOF
-
 curl -L \
   -O "https://libsdl.org/release/$SDL.tar.gz" \
   -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK.tar.gz" \
@@ -37,7 +27,7 @@ curl -L \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz"
 
-shasum -a 256 --check SHASUMS
+pip install setuptools
 
 echo "Installing SDL..."
 tar xf "$SDL.tar.gz"
